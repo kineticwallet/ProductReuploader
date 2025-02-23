@@ -4,6 +4,7 @@ Pass and Product reuploader for Roblox
 <h3>How to use:</h3>
 <ol>
 <li>Install the zip file from releases, extract it and run the compiled exe</li>
+  or
 <li>Clone this repository, install requirements using pip and run main.py (Requires Python 3)</li>
 </ol>
 
