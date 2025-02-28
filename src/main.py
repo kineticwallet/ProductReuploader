@@ -21,7 +21,7 @@ class Main():
             print(f"You do not have edit access to universe with ID: {globals()['toUniverse']}")
             return
         
-        if globals()['Products'] == "Y" or "y":
+        if globals()['Products'] == "y":
             allDevProducts = self.getAllDevProducts(globals()['fromUniverse'])
 
             if allDevProducts != None:
@@ -34,7 +34,7 @@ class Main():
                     Main().uploadDevProduct(product_name, product_desc, product_price, product_image_link)
                     time.sleep(0.1)
 
-        if globals()['Passes'] == "Y" or "y":
+        if globals()['Passes'] == "y":
             allPasses = self.getAllPasses(globals()['fromUniverse'])
 
             if allPasses != None:
@@ -49,7 +49,7 @@ class Main():
 
                         Main().uploadGamepass(pass_name, pass_desc, pass_price, pass_image_link)
                         time.sleep(0.1)
-        if globals()['EmptyToken'] == "Y" or "y":
+        if globals()['EmptyToken'] == "y":
             open("cookie.txt", "w").close()
 
     def getNewHeaders(self):
