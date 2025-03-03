@@ -30,8 +30,9 @@ class Main():
                     product_desc = str(product["Description"])
                     product_price = int(product["priceInRobux"])
                     product_image_link = self.getImageLink(product["iconImageAssetId"])
+                    old_product_id = int(product["id"])
 
-                    Main().uploadDevProduct(product_name, product_desc, product_price, product_image_link)
+                    Main().uploadDevProduct(product_name, product_desc, product_price, product_image_link, old_product_id)
                     time.sleep(0.1)
 
         if globals()['Passes'] == "y":
@@ -46,8 +47,9 @@ class Main():
                         pass_desc = str(pass_info["Description"])
                         pass_price = int(pass_info["PriceInRobux"])
                         pass_image_link = self.getImageLink(pass_info["IconImageAssetId"])
+                        old_pass_id = int(pass_info["TargetId"])
 
-                        Main().uploadGamepass(pass_name, pass_desc, pass_price, pass_image_link)
+                        Main().uploadGamepass(pass_name, pass_desc, pass_price, pass_image_link, old_pass_id)
                         time.sleep(0.1)
         if globals()['EmptyToken'] == "y":
             open("cookie.txt", "w").close()
@@ -139,7 +141,7 @@ class Main():
         else:
             return imageResponse.json()["data"][0]["imageUrl"]
 
-    def uploadDevProduct(self, productName: str, productDescription: str, productPrice: int, productImageLink):
+    def uploadDevProduct(self, productName: str, productDescription: str, productPrice: int, productImageLink, oldProductID: int):
         base_url = f"""https://apis.roblox.com/developer-products/v1/universes/{globals()['toUniverse']}/developerproducts?name={productName}&description={productDescription}&priceInRobux={productPrice}"""
 
         files = None
@@ -157,6 +159,17 @@ class Main():
 
         print(f"Creating Product \"{productName}\"")
 
+        devproduct_id = oldProductID
+        product_response = requests.get(f'https://apis.roblox.com/developer-products/v1/developer-products/{devproduct_id}', headers=Main().getNewHeaders())
+
+        if product_response.status_code != 200:
+            if product_response.get("x-csrf-token"):
+                self.refreshCSRF(product_response)
+                self.uploadDevProduct(productName, productDescription, productPrice, productImageLink, oldProductID)
+        else:
+            product_id = product_response.json()["id"]
+            print("Old product ID: " + str(product_id))
+
         response = requests.post(base_url, headers=Main().getNewHeaders())
 
         if response.status_code != 200:
@@ -165,7 +178,7 @@ class Main():
 
             if response_headers.get("x-csrf-token"):
                 self.refreshCSRF(response_headers)
-                self.uploadDevProduct(productName, productDescription, productPrice, productImageLink)
+                self.uploadDevProduct(productName, productDescription, productPrice, productImageLink, oldProductID)
         else:
             devproduct_id = response.json()["id"]
             product_response = requests.get(f'https://apis.roblox.com/developer-products/v1/developer-products/{devproduct_id}', headers=Main().getNewHeaders())
@@ -179,7 +192,7 @@ class Main():
                 if image_response.status_code != 200:
                     print("Failed to upload product image.")
 
-    def uploadGamepass(self, passName: str, passDescription: str, passPrice: int, passImageLink):
+    def uploadGamepass(self, passName: str, passDescription: str, passPrice: int, passImageLink, oldPassID: int):
         base_url = "https://apis.roblox.com/game-passes/v1/game-passes"
 
         form_data = {
@@ -196,14 +209,14 @@ class Main():
             files = {"File": BytesIO(requests.get(passImageLink).content)}
 
         print(f"Creating Pass \"{passName}\"")
+        print(f"Old pass ID: {oldPassID}")
         passResponse = requests.post(base_url, data=form_data, files=files, headers = Main().getNewHeaders())
-        #print(passResponse.json())
 
         if passResponse.status_code != 200:
             print(passResponse.text)
             if passResponse.headers.get("x-csrf-token"):
                 self.refreshCSRF(passResponse.headers)
-                self.uploadGamepass(passName, passDescription, passPrice, passImageLink)
+                self.uploadGamepass(passName, passDescription, passPrice, passImageLink, oldPassID)
         else:
             passId = passResponse.json()["gamePassId"]
             print("Pass ID: " + str(passId))
